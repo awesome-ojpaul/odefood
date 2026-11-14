@@ -28,7 +28,7 @@ public class Category {
 
 	public List<Item> getItems() {
 		if (items.size() <= 0) {
-			for (Item item : SQLDataSource.readItems(id).values()) {
+			for (Item item : SQLDataSource.readItems(id)) {
 				items.add(item);
 			}
 		}
@@ -40,6 +40,22 @@ public class Category {
 		items.add(item);
 	}
 
+	public void save() {
+		Category.save(new Category(id, name));
+	}
+	
+	public static List<Item> getItems(int id) {
+		return SQLDataSource.readItems(id);
+	}
+
+	public static void save(Category category) {
+		SQLDataSource.createCategory(category);
+	}
+
+	public static List<Category> getAll() {
+		return SQLDataSource.readCategories();
+	}
+
 	public Category() {
 		super();
 	}
@@ -48,6 +64,24 @@ public class Category {
 		super();
 		this.id = id;
 		this.name = name;
+	}
+	
+	@Override
+	public String toString() {
+		super.toString();
+		return name;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		super.equals(obj); 
+		boolean isEqual = false;
+		
+		if(obj instanceof Category) {
+			isEqual = ((Category) obj).getId() == id;
+		}
+		
+		return  isEqual;
 	}
 
 }

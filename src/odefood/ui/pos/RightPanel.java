@@ -46,12 +46,12 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 		setLayout(layout);
 
 		add(new OrderSummaryPanel(), "North");
-		add(new InvoicePreviewPanel() , "Center");
+		add(new InvoicePreviewPanel(), "Center");
 
 		ApplicationState.addApplicationStateListener(this);
 	}
-	
-	private class OrderSummaryPanel extends JPanel{
+
+	private class OrderSummaryPanel extends JPanel {
 		public OrderSummaryPanel() {
 			setBorder(new TitledBorder("Order Summary"));
 			BorderLayout layout = new BorderLayout();
@@ -105,14 +105,15 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 				public void changedUpdate(DocumentEvent e) {
 
 				}
-				
+
 				private void updateDiscountOnOrder() {
 					double discount = 0;
 					try {
 						discount = Double.parseDouble(orderItemsDiscountTextField.getText());
 						if (ApplicationState.selectedOrder != null) {
 							ApplicationState.selectedOrder.setDiscount(discount);
-							selectedItemsTotalTextField.setText(String.valueOf(ApplicationState.selectedOrder.getTotal()));
+							selectedItemsTotalTextField
+									.setText(String.valueOf(ApplicationState.selectedOrder.getTotal()));
 							invoiceEditorPane.setText("");
 						}
 					} catch (NumberFormatException ex) {
@@ -169,8 +170,8 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 			add(panel, "Center");
 		}
 	}
-	
-	private class InvoicePreviewPanel extends JPanel{
+
+	private class InvoicePreviewPanel extends JPanel {
 		public InvoicePreviewPanel() {
 			Border border = new TitledBorder("Invoice Preview");
 			setBorder(border);
@@ -235,7 +236,8 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 			stringBuilder.append("<br>");
 			stringBuilder.append("Discount: ");
 			stringBuilder.append("<strong>");
-			stringBuilder.append((ApplicationState.selectedOrder.getDiscount() / 100) * ApplicationState.selectedOrder.getSubtotal());
+			stringBuilder.append((ApplicationState.selectedOrder.getDiscount() / 100)
+					* ApplicationState.selectedOrder.getSubtotal());
 			stringBuilder.append("</strong>");
 			stringBuilder.append("<br>");
 			stringBuilder.append("Total: ");

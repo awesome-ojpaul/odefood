@@ -6,7 +6,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import odefood.data.Constants;
 import odefood.data.models.Category;
@@ -35,18 +36,18 @@ public class SQLDataSource {
 		}
 	}
 
-	public static HashMap<String, Category> readCategories() {
+	public static List<Category> readCategories() {
 		Connection connection = getConnection();
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		HashMap<String, Category> categories = new HashMap<>();
+		List<Category> categories = new ArrayList<>();
 
 		try {
 			preparedStatement = connection.prepareStatement(Constants.READ_CATEGORIES_SQL);
 			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				categories.put(rs.getString("Name"), new Category(rs.getInt("Id"), rs.getString("Name")));
+				categories.add(new Category(rs.getInt("Id"), rs.getString("Name")));
 			}
 
 		} catch (SQLException e) {
@@ -62,6 +63,36 @@ public class SQLDataSource {
 		}
 
 		return categories;
+	}
+
+	public static Category readCategory(int id) {
+		Connection connection = getConnection();
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		Category category = null;
+
+		try {
+			preparedStatement = connection.prepareStatement(Constants.READ_CATEGORY_SQL);
+			preparedStatement.setInt(1, id);
+			rs = preparedStatement.executeQuery();
+
+			if (rs.next()) {
+				category = new Category(rs.getInt("Id"), rs.getString("Name"));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				preparedStatement.close();
+				rs.close();
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return category;
 	}
 
 	public static void createItem(Item item) {
@@ -86,18 +117,18 @@ public class SQLDataSource {
 		}
 	}
 
-	public static HashMap<String, Item> readItems() {
+	public static List<Item> readItems() {
 		Connection connection = getConnection();
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		HashMap<String, Item> items = new HashMap<>();
+		List<Item> items = new ArrayList<>();
 
 		try {
 			preparedStatement = connection.prepareStatement(Constants.READ_ITEMS_SQL);
 			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				items.put(rs.getString("Name"), new Item(rs.getInt("Id"), rs.getString("Name"), rs.getDouble("Price"),
+				items.add(new Item(rs.getInt("Id"), rs.getString("Name"), rs.getDouble("Price"),
 						rs.getInt("Quantity"), rs.getInt("CategoryId")));
 			}
 
@@ -116,11 +147,11 @@ public class SQLDataSource {
 		return items;
 	}
 
-	public static HashMap<String, Item> readItems(int categoryId) {
+	public static List<Item> readItems(int categoryId) {
 		Connection connection = getConnection();
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		HashMap<String, Item> items = new HashMap<>();
+		List<Item> items = new ArrayList<>();
 
 		try {
 			preparedStatement = connection.prepareStatement(Constants.READ_CATEGORY_ITEMS_SQL);
@@ -128,7 +159,7 @@ public class SQLDataSource {
 			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				items.put(rs.getString("Name"), new Item(rs.getInt("Id"), rs.getString("Name"), rs.getDouble("Price"),
+				items.add(new Item(rs.getInt("Id"), rs.getString("Name"), rs.getDouble("Price"),
 						rs.getInt("Quantity"), rs.getInt("CategoryId")));
 			}
 
@@ -208,7 +239,7 @@ public class SQLDataSource {
 				preparedStatementCreateOrderItem.setInt(3, orderItem.getQuantity());
 				preparedStatementCreateOrderItem.executeUpdate();
 			}
-			
+
 			connection.commit();
 
 		} catch (SQLException e) {
@@ -230,6 +261,37 @@ public class SQLDataSource {
 		}
 	}
 
+	public static List<OrderItem> readOrderItems(int orderId){
+		Connection connection = getConnection();
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		List<OrderItem> orderItems = new ArrayList<>();
+
+		try {
+			preparedStatement = connection.prepareStatement(Constants.READ_ORDER_ITEMS_SQL);
+			preparedStatement.setInt(1, orderId);
+			rs = preparedStatement.executeQuery();
+
+			while (rs.next()) {
+				// TODO - Fix this. Read order items from database
+				orderItems.add(new OrderItem(new Item(rs.getInt("Id"), rs.getString("Name"), rs.getDouble("Price"), rs.getInt("QuantityAvailable"), rs.getInt("CategoryId")), rs.getInt("Quantity")));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				preparedStatement.close();
+				rs.close();
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return orderItems;
+	}
+	
 	private static Connection getConnection() {
 		Connection connection = null;
 

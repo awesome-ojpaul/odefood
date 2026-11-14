@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import odefood.data.sources.SQLDataSource;
+
 public class Order {
 	private int id;
 	private String number;
@@ -88,11 +90,23 @@ public class Order {
 			itemsCount = 0;
 		}
 	}
-
+	
 	public List<OrderItem> getItems(){
+		if(items.size() <= 0) {
+			// TODO - Get order items from data source
+		}
+		
 		return items;
 	}
 	
+	public void save() {
+		Order.save(new Order(id, discount, subtotal));
+	}
+
+	public static void save(Order order) {
+		SQLDataSource.createOrder(order);
+	}
+
 	public Order() {
 		super();
 	}

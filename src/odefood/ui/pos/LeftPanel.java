@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
@@ -26,16 +26,15 @@ import odefood.ApplicationStateListener;
 import odefood.data.models.Category;
 import odefood.data.models.Item;
 import odefood.data.models.OrderItem;
-import odefood.data.sources.SQLDataSource;
 
 @SuppressWarnings("serial")
 public class LeftPanel extends JPanel {
 
-	private HashMap<String, Category> categories = null;
-	private HashMap<String, Item> items = null;
-	private DefaultComboBoxModel<String> categoriesComboBoxModel;
-	private DefaultListModel<String> itemsListModel;
-	private JList<String> itemsList;
+	private List<Category> categories = null;
+	private List<Item> items = null;
+	private DefaultComboBoxModel<Category> categoriesComboBoxModel;
+	private DefaultListModel<Item> itemsListModel;
+	private JList<Item> itemsList;
 	private JTextField selectedItemTextField;
 	private JTextField selectedItemPriceTextField;
 	private JTextField selectedItemQuantityTextField;
@@ -61,7 +60,7 @@ public class LeftPanel extends JPanel {
 	}
 
 	private class CategoriesPanel extends JPanel {
-		JComboBox<String> categoriesComboBox;
+		JComboBox<Category> categoriesComboBox;
 
 		public CategoriesPanel() {
 			setBorder(new TitledBorder("Categories"));
@@ -72,12 +71,13 @@ public class LeftPanel extends JPanel {
 			categoriesComboBox = new JComboBox<>(categoriesComboBoxModel);
 			loadCategories();
 			categoriesComboBox.addItemListener(e -> {
-				String selectedCategoryName = ((JComboBox<?>) e.getSource()).getSelectedItem().toString();
-				if (categories.containsKey(selectedCategoryName)) {
-					Category selectedCategory = categories.get(selectedCategoryName);
-					loadCategoryItems(selectedCategory.getId());
-				} else {
-					loadItems();
+				if (((JComboBox<?>) e.getSource()).getSelectedItem() != null) {
+					Category selectedCategory = (Category) ((JComboBox<?>) e.getSource()).getSelectedItem();
+					if (categories.contains(selectedCategory)) {
+						loadCategoryItems(selectedCategory.getId());
+					} else {
+						loadItems();
+					}
 				}
 			});
 			add(categoriesComboBox, "Center");
@@ -100,11 +100,8 @@ public class LeftPanel extends JPanel {
 			itemsList.addListSelectionListener(e -> {
 				if (!e.getValueIsAdjusting()) {
 					if (((JList<?>) e.getSource()).getSelectedValue() != null) {
-						String selectedItemNamePrice = ((JList<?>) e.getSource()).getSelectedValue().toString();
-						String selectedItemName = selectedItemNamePrice.substring(0, selectedItemNamePrice.indexOf('-'))
-								.trim();
-						if (items.containsKey(selectedItemName)) {
-							ApplicationState.selectedItem = items.get(selectedItemName);
+						ApplicationState.selectedItem = (Item) ((JList<?>) e.getSource()).getSelectedValue();
+						if (items.contains(ApplicationState.selectedItem)) {
 							selectedItemTextField.setText(ApplicationState.selectedItem.getName());
 							selectedItemPriceTextField
 									.setText(String.valueOf(ApplicationState.selectedItem.getPrice()));
@@ -115,7 +112,6 @@ public class LeftPanel extends JPanel {
 							} else {
 								selectedItemQuantityTextField.setText(String.valueOf(1));
 							}
-
 						}
 					} else {
 						ApplicationState.selectedItem = null;
@@ -255,34 +251,41 @@ public class LeftPanel extends JPanel {
 				selectedItemTextField.setText(ApplicationState.selectedItem.getName());
 				selectedItemPriceTextField.setText(String.valueOf(ApplicationState.selectedItem.getPrice()));
 				selectedItemQuantityTextField.setText(String.valueOf(ApplicationState.selectedOrderItem.getQuantity()));
-				itemsList.setSelectedValue(ApplicationState.selectedItem.getName() + " ------ UGX "
-						+ ApplicationState.selectedItem.getPrice(), true);
+				itemsList.setSelectedValue(ApplicationState.selectedItem, true);
+			} else {
+				selectedItemTextField.setText("");
+				selectedItemPriceTextField.setText("");
+				selectedItemQuantityTextField.setText("");
+				itemsList.clearSelection();
 			}
 		}
 	}
 
 	private void loadCategoryItems(int categoryId) {
 		itemsListModel.removeAllElements();
-		items = SQLDataSource.readItems(categoryId);
-		for (Item item : items.values()) {
-			itemsListModel.addElement(item.getName() + " ------ UGX " + item.getPrice());
+		items = Category.getItems(categoryId);
+		for (Item item : items) {
+			itemsListModel.addElement(item);
 		}
 	}
 
 	private void loadItems() {
 		itemsListModel.removeAllElements();
-		items = SQLDataSource.readItems();
-		for (Item item : items.values()) {
-			itemsListModel.addElement(item.getName() + " ------ UGX " + item.getPrice());
+		items = Item.getAll();
+		for (Item item : items) {
+			itemsListModel.addElement(item);
 		}
 	}
 
 	private void loadCategories() {
 		categoriesComboBoxModel.removeAllElements();
-		categories = SQLDataSource.readCategories();
-		categoriesComboBoxModel.addElement("--- Show all categories ---");
-		for (Category category : categories.values()) {
-			categoriesComboBoxModel.addElement(category.getName());
+		categories = Category.getAll();
+		categoriesComboBoxModel.addElement(new Category(0, "--- Show all categories ---")); // This category is used to
+																							// display all items in the
+																							// categoriesComboBox. Show
+																							// all categories
+		for (Category category : categories) {
+			categoriesComboBoxModel.addElement(category);
 		}
 	}
 
