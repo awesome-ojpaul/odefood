@@ -23,9 +23,9 @@ import javax.swing.border.TitledBorder;
 import odefood.ApplicationState;
 import odefood.ApplicationStateEvent;
 import odefood.ApplicationStateListener;
+import odefood.data.models.Cart;
 import odefood.data.models.Category;
 import odefood.data.models.Item;
-import odefood.data.models.OrderItem;
 
 @SuppressWarnings("serial")
 public class LeftPanel extends JPanel {
@@ -59,7 +59,7 @@ public class LeftPanel extends JPanel {
 		add(new SelectedItemPanel(), "South");
 	}
 
-	private class CategoriesPanel extends JPanel {
+	private class CategoriesPanel extends JPanel implements ApplicationStateListener {
 		JComboBox<Category> categoriesComboBox;
 
 		public CategoriesPanel() {
@@ -82,9 +82,15 @@ public class LeftPanel extends JPanel {
 			});
 			add(categoriesComboBox, "Center");
 		}
+
+		@Override
+		public void OnApplicationStateChanged(ApplicationStateEvent e) {
+			loadCategories();
+			
+		}
 	}
 
-	private class ItemsPanel extends JPanel {
+	private class ItemsPanel extends JPanel implements ApplicationStateListener {
 
 		public ItemsPanel() {
 			setBorder(new TitledBorder("Items"));
@@ -126,6 +132,14 @@ public class LeftPanel extends JPanel {
 			loadItems();
 			JScrollPane scrollPane = new JScrollPane(itemsList);
 			add(scrollPane, "Center");
+			
+
+			ApplicationState.addApplicationStateListener(this);
+		}
+
+		@Override
+		public void OnApplicationStateChanged(ApplicationStateEvent e) {
+			loadItems();			
 		}
 	}
 
@@ -164,29 +178,12 @@ public class LeftPanel extends JPanel {
 			panel.add(removeButton);
 			removeButton.addActionListener(e -> {
 				if (ApplicationState.selectedItem != null) {
-					int quantity = Integer.parseInt(selectedItemQuantityTextField.getText());
-					ApplicationState.selectedOrderItem = new OrderItem(ApplicationState.selectedItem, quantity);
 
-					boolean orderContainsItem = false;
-					int rowCount = ApplicationState.defaultTableModel.getRowCount();
-					int rowContainingItem = -1;
+					ApplicationState.currentCart.removeItem(ApplicationState.selectedItem);
+					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
 
-					for (int i = 0; i < rowCount; i++) {
-						String item = ApplicationState.defaultTableModel.getValueAt(i, 0).toString();
-						if (item.equalsIgnoreCase(ApplicationState.selectedOrderItem.getItem())) {
-							orderContainsItem = true;
-							rowContainingItem = i;
-						}
-					}
-
-					if (orderContainsItem) {
-						if (rowContainingItem > -1) {
-							ApplicationState.defaultTableModel.removeRow(rowContainingItem);
-						}
-					}
-
-					ApplicationState.selectedItem = null;
 					ApplicationState.selectedOrderItem = null;
+					ApplicationState.selectedItem = null;
 					selectedItemTextField.setText("");
 					selectedItemPriceTextField.setText("");
 					selectedItemQuantityTextField.setText("");
@@ -198,41 +195,16 @@ public class LeftPanel extends JPanel {
 			addButton.addActionListener(e -> {
 				if (ApplicationState.selectedItem != null) {
 					int quantity = Integer.parseInt(selectedItemQuantityTextField.getText());
-					ApplicationState.selectedOrderItem = new OrderItem(ApplicationState.selectedItem, quantity);
 
-					boolean orderContainsItem = false;
-					int rowCount = ApplicationState.defaultTableModel.getRowCount();
-					int rowContainingItem = -1;
-					int colContainingQuantity = 2;
-					for (int i = 0; i < rowCount; i++) {
-						String item = ApplicationState.defaultTableModel.getValueAt(i, 0).toString();
-						if (item.equalsIgnoreCase(ApplicationState.selectedOrderItem.getItem())) {
-							orderContainsItem = true;
-							rowContainingItem = i;
-						}
+					if (ApplicationState.currentCart == null) {
+						ApplicationState.currentCart = new Cart();
 					}
-					if (orderContainsItem) {
-						int containedQuantity = Integer.parseInt(ApplicationState.defaultTableModel
-								.getValueAt(rowContainingItem, colContainingQuantity).toString());
-						ApplicationState.selectedOrderItem.setQuantity(quantity + containedQuantity);
-						if (rowContainingItem > -1) {
-							ApplicationState.defaultTableModel.removeRow(rowContainingItem);
-						}
-						ApplicationState.defaultTableModel.insertRow(rowContainingItem,
-								new Object[] { ApplicationState.selectedOrderItem.getItem(),
-										ApplicationState.selectedOrderItem.getUnitPrice(),
-										ApplicationState.selectedOrderItem.getQuantity(),
-										ApplicationState.selectedOrderItem.getAmount() });
-					} else {
-						ApplicationState.defaultTableModel
-								.addRow(new Object[] { ApplicationState.selectedOrderItem.getItem(),
-										ApplicationState.selectedOrderItem.getUnitPrice(),
-										ApplicationState.selectedOrderItem.getQuantity(),
-										ApplicationState.selectedOrderItem.getAmount() });
-					}
+					
+					ApplicationState.currentCart.addItem(ApplicationState.selectedItem, quantity);
+					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
 
-					ApplicationState.selectedItem = null;
 					ApplicationState.selectedOrderItem = null;
+					ApplicationState.selectedItem = null;
 					selectedItemTextField.setText("");
 					selectedItemPriceTextField.setText("");
 					selectedItemQuantityTextField.setText("");

@@ -26,10 +26,10 @@ public class Order {
 	}
 
 	public String getNumber() {
-		if(number == null || number.isEmpty()) {
+		if (number == null || number.isEmpty()) {
 			number = UUID.randomUUID().toString().substring(0, 6);
 		}
-		
+
 		return number;
 	}
 
@@ -66,10 +66,10 @@ public class Order {
 	}
 
 	public Date getDate() {
-		if(date == null) {
+		if (date == null) {
 			date = new Date();
 		}
-		
+
 		return date;
 	}
 
@@ -82,23 +82,21 @@ public class Order {
 	}
 
 	public void removeItems() {
-		if(items.size() > 0) {
-			items.clear();
-			discount = 0.0;
-			subtotal = 0.0;
-			total = 0.0;
-			itemsCount = 0;
-		}
+		items.clear();
+		discount = 0.0;
+		subtotal = 0.0;
+		total = 0.0;
+		itemsCount = 0;
 	}
-	
-	public List<OrderItem> getItems(){
-		if(items.size() <= 0) {
+
+	public List<OrderItem> getItems() {
+		if (items.size() <= 0) {
 			// TODO - Get order items from data source
 		}
-		
+
 		return items;
 	}
-	
+
 	public void save() {
 		Order.save(new Order(id, discount, subtotal));
 	}

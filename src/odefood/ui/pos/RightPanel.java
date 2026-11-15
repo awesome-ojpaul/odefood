@@ -22,6 +22,8 @@ import javax.swing.event.DocumentListener;
 import odefood.ApplicationState;
 import odefood.ApplicationStateEvent;
 import odefood.ApplicationStateListener;
+import odefood.data.models.Cart;
+import odefood.data.models.Order;
 import odefood.data.models.OrderItem;
 import odefood.ui.Constants;
 
@@ -110,10 +112,10 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 					double discount = 0;
 					try {
 						discount = Double.parseDouble(orderItemsDiscountTextField.getText());
-						if (ApplicationState.selectedOrder != null) {
-							ApplicationState.selectedOrder.setDiscount(discount);
-							selectedItemsTotalTextField
-									.setText(String.valueOf(ApplicationState.selectedOrder.getTotal()));
+						Cart currectCart = ApplicationState.currentCart;
+						if (currectCart != null) {
+							currectCart.setDiscount(discount);
+							selectedItemsTotalTextField.setText(String.valueOf(currectCart.getTotal()));
 							invoiceEditorPane.setText("");
 						}
 					} catch (NumberFormatException ex) {
@@ -135,6 +137,15 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 
 			JButton discardButton = new JButton("Discard Order");
 			discardButton.addActionListener(e -> {
+				if (ApplicationState.currentCart != null) {
+					Cart.discardCart(ApplicationState.currentCart);
+					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
+				}
+				
+				ApplicationState.currentCart = null;
+				ApplicationState.selectedItem = null;
+				ApplicationState.selectedOrderItem = null;
+				
 				ApplicationState.resetDefaultTableModel();
 				ApplicationState.updateApplicationState(e.getSource());
 				invoiceEditorPane.setText("");
@@ -157,7 +168,7 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 
 						if (isPrintSuccessful) {
 							ApplicationState.canCompleteOrder = true;
-							ApplicationState.updateApplicationState(e);
+							ApplicationState.updateApplicationState(e.getSource());
 						}
 
 					} catch (PrinterException ex) {
@@ -185,19 +196,20 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 
 	private String generateInvoice() {
 		StringBuilder stringBuilder = new StringBuilder();
+		Order currentOrder = ApplicationState.getCurrentOrder();
 
-		if (ApplicationState.selectedOrder != null) {
-			List<OrderItem> orderItems = ApplicationState.selectedOrder.getItems();
+		if (currentOrder != null) {
+			List<OrderItem> orderItems = currentOrder.getItems();
 
 			stringBuilder.append("<p>");
 			stringBuilder.append("Date: ");
 			stringBuilder.append("<strong>");
-			stringBuilder.append(ApplicationState.selectedOrder.getDate());
+			stringBuilder.append(currentOrder.getDate());
 			stringBuilder.append("</strong>");
 			stringBuilder.append("<br>");
 			stringBuilder.append("Order Number: ");
 			stringBuilder.append("<strong>");
-			stringBuilder.append(ApplicationState.selectedOrder.getNumber().toUpperCase());
+			stringBuilder.append(currentOrder.getNumber().toUpperCase());
 			stringBuilder.append("</strong>");
 			stringBuilder.append("</p>");
 			stringBuilder.append("<p>");
@@ -231,18 +243,17 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 			stringBuilder.append("<p>");
 			stringBuilder.append("Subtotal: ");
 			stringBuilder.append("<strong>");
-			stringBuilder.append(ApplicationState.selectedOrder.getSubtotal());
+			stringBuilder.append(currentOrder.getSubtotal());
 			stringBuilder.append("</strong>");
 			stringBuilder.append("<br>");
 			stringBuilder.append("Discount: ");
 			stringBuilder.append("<strong>");
-			stringBuilder.append((ApplicationState.selectedOrder.getDiscount() / 100)
-					* ApplicationState.selectedOrder.getSubtotal());
+			stringBuilder.append((currentOrder.getDiscount() / 100) * currentOrder.getSubtotal());
 			stringBuilder.append("</strong>");
 			stringBuilder.append("<br>");
 			stringBuilder.append("Total: ");
 			stringBuilder.append("<strong>");
-			stringBuilder.append(ApplicationState.selectedOrder.getTotal());
+			stringBuilder.append(currentOrder.getTotal());
 			stringBuilder.append("</strong>");
 			stringBuilder.append("</p>");
 
@@ -259,15 +270,22 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 
 	@Override
 	public void OnApplicationStateChanged(ApplicationStateEvent e) {
-		if (ApplicationState.selectedOrder != null) {
-			orderItemsCountTextField.setText(String.valueOf(ApplicationState.selectedOrder.getItemsCount()));
-			orderItemsSubtotalTextField.setText(String.valueOf(ApplicationState.selectedOrder.getSubtotal()));
-			orderItemsDiscountTextField.setText(String.valueOf(ApplicationState.selectedOrder.getDiscount()));
-			selectedItemsTotalTextField.setText(String.valueOf(ApplicationState.selectedOrder.getTotal()));
+
+		if (ApplicationState.currentCart != null) {
+			orderItemsCountTextField.setText(String.valueOf(ApplicationState.currentCart.getItemsCount()));
+			orderItemsSubtotalTextField.setText(String.valueOf(ApplicationState.currentCart.getSubtotal()));
+			orderItemsDiscountTextField.setText(String.valueOf(ApplicationState.currentCart.getDiscount()));
+			selectedItemsTotalTextField.setText(String.valueOf(ApplicationState.currentCart.getTotal()));
 
 			if (ApplicationState.canCompleteOrder) {
 				invoiceEditorPane.setText("");
 			}
+		} else {
+			orderItemsCountTextField.setText("");
+			orderItemsSubtotalTextField.setText("");
+			orderItemsDiscountTextField.setText("");
+			selectedItemsTotalTextField.setText("");
+			invoiceEditorPane.setText("");
 		}
 
 	}

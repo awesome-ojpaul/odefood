@@ -75,6 +75,14 @@ public class Item {
 	public static Item get(String name) {
 		return SQLDataSource.readItem(name);
 	}
+	
+	public static int getAvailableQuantity(int itemId) {
+		return SQLDataSource.readItemQuantityAvailable(itemId);	
+	}
+	
+	public static void updateAvailableQuantity(int itemId, int quantity) {
+		SQLDataSource.updateItemQuantityAvailable(itemId, quantity);
+	}
 
 	public Item() {
 		super();
@@ -105,5 +113,4 @@ public class Item {
 		
 		return isEqual;
 	}
-
 }

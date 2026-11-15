@@ -124,7 +124,7 @@ public class SQLDataSource {
 		List<Item> items = new ArrayList<>();
 
 		try {
-			preparedStatement = connection.prepareStatement(Constants.READ_ITEMS_SQL);
+			preparedStatement = connection.prepareStatement(Constants.READ_AVAILABLE_ITEMS_SQL);
 			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
@@ -154,7 +154,7 @@ public class SQLDataSource {
 		List<Item> items = new ArrayList<>();
 
 		try {
-			preparedStatement = connection.prepareStatement(Constants.READ_CATEGORY_ITEMS_SQL);
+			preparedStatement = connection.prepareStatement(Constants.READ_AVIALABLE_CATEGORY_ITEMS_SQL);
 			preparedStatement.setInt(1, categoryId);
 			rs = preparedStatement.executeQuery();
 
@@ -290,6 +290,60 @@ public class SQLDataSource {
 		}
 
 		return orderItems;
+	}
+
+	public static int readItemQuantityAvailable(int itemId) {
+		Connection connection = getConnection();
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		int quantityAvailable = 0;
+
+		try {
+			preparedStatement = connection.prepareStatement(Constants.READ_ITEM_QUANTITY_AVAILABLE_SQL);
+			preparedStatement.setInt(1, itemId);
+			rs = preparedStatement.executeQuery();
+
+			if (rs.next()) {
+				quantityAvailable = rs.getInt("Quantity");
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				preparedStatement.close();
+				rs.close();
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return quantityAvailable;
+		
+	}
+	
+	public static void updateItemQuantityAvailable(int itemId, int quantity) {
+		Connection connection = getConnection();
+		PreparedStatement preparedStatement = null;
+
+		try {
+			preparedStatement = connection.prepareStatement(Constants.UPDATE_ITEM_QUANTITY_AVAILABLE_SQL);
+			preparedStatement.setInt(1, quantity);
+			preparedStatement.setInt(2, itemId);
+			preparedStatement.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				preparedStatement.close();
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 	
 	private static Connection getConnection() {

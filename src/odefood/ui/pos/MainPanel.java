@@ -17,6 +17,7 @@ import javax.swing.event.TableModelEvent;
 import odefood.ApplicationState;
 import odefood.ApplicationStateEvent;
 import odefood.ApplicationStateListener;
+import odefood.data.models.Cart;
 import odefood.data.models.Item;
 import odefood.data.models.Order;
 import odefood.data.models.OrderItem;
@@ -56,7 +57,7 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 		completeButton.setEnabled(ApplicationState.canCompleteOrder);
 	}
 
-	private class OrderItemsPanel extends JPanel{
+	private class OrderItemsPanel extends JPanel {
 		public OrderItemsPanel() {
 			setBorder(new TitledBorder("Order Items"));
 			BorderLayout orderItemsPanelLayout = new BorderLayout();
@@ -81,30 +82,20 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 					}
 				}
 			});
+
 			ApplicationState.defaultTableModel.addTableModelListener(e -> {
 				if (e.getType() == TableModelEvent.INSERT || e.getType() == TableModelEvent.UPDATE
 						|| e.getType() == TableModelEvent.DELETE) {
-					ApplicationState.selectedOrder = new Order();
-
-					ApplicationState.selectedOrder.removeItems();
-					int rowCount = ApplicationState.defaultTableModel.getRowCount();
-					for (int i = 0; i < rowCount; i++) {
-						String itemName = ApplicationState.defaultTableModel.getValueAt(i, 0).toString();
-						int quantity = Integer.parseInt(ApplicationState.defaultTableModel.getValueAt(i, 2).toString());
-						Item item = Item.get(itemName);
-						OrderItem orderItem = new OrderItem(item, quantity);
-						ApplicationState.selectedOrder.addOrderItem(orderItem);
-					}
-
 					ApplicationState.updateApplicationState(e.getSource());
 				}
 			});
+
 			JScrollPane scrollPane = new JScrollPane(itemsTable);
 			add(scrollPane);
 		}
 	}
 
-	private class ButtonsPanel extends JPanel{
+	private class ButtonsPanel extends JPanel {
 		public ButtonsPanel() {
 			GridLayout buttonsPanelLayout = new GridLayout(1, 2);
 			buttonsPanelLayout.setHgap(5);
@@ -113,26 +104,34 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 
 			JButton clearButton = new JButton("Clear");
 			clearButton.addActionListener(e -> {
-				if (ApplicationState.selectedOrder != null) {
-					ApplicationState.selectedOrder.removeItems();
+
+				if (ApplicationState.currentCart != null) {
+					Cart.discardCart(ApplicationState.currentCart);
+					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
 				}
+				
+				ApplicationState.currentCart = null;
 				ApplicationState.selectedItem = null;
-				ApplicationState.selectedOrder = null;
 				ApplicationState.selectedOrderItem = null;
+				
 				ApplicationState.resetDefaultTableModel();
-				ApplicationState.updateApplicationState(e);
+				ApplicationState.updateApplicationState(e.getSource());
 			});
 			add(clearButton);
 
 			completeButton = new JButton("Complete");
 			completeButton.setEnabled(ApplicationState.canCompleteOrder);
 			completeButton.addActionListener(e -> {
-				if (ApplicationState.selectedOrder != null) {
-					Order.save(ApplicationState.selectedOrder);
+				Order currentOrder = ApplicationState.getCurrentOrder();
+				if (currentOrder != null) {
+					Order.save(currentOrder);
+
+					Cart.discardCart(ApplicationState.currentCart);
+					ApplicationState.currentCart = null;
+					ApplicationState.selectedItem = null;
+					ApplicationState.selectedOrderItem = null;
 					
-					ApplicationState.selectedOrder.removeItems();
 					ApplicationState.resetDefaultTableModel();
-					ApplicationState.updateApplicationState(e);
 					ApplicationState.canCompleteOrder = false;
 					ApplicationState.updateApplicationState(e.getSource());
 				}
