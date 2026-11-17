@@ -6,25 +6,33 @@ import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
 import odefood.data.models.Cart;
+import odefood.data.models.CartItem;
 import odefood.data.models.Item;
 import odefood.data.models.Order;
-import odefood.data.models.OrderItem;
 
 public final class ApplicationState {
 	private static final List<ApplicationStateListener> listeners = new ArrayList<>();
 
 	private static Object[] columns = new Object[] { "Item", "Unit Price (UGX)", "Quantity", "Amount (UGX)" };
-	public static DefaultTableModel defaultTableModel = new DefaultTableModel(null, columns);
+	public static DefaultTableModel cartItemsTableModel = new DefaultTableModel(null, columns);
 
-	public static Cart currentCart = null;
 	public static Item selectedItem = null;
-	public static OrderItem selectedOrderItem = null;
-
+	public static Cart currentCart = null;
+	public static CartItem selectedCartItem = null;
 	public static boolean canCompleteOrder = false;
 	
 	public static Order getCurrentOrder() {
 		Order currentOrder = Cart.convertToOrder(currentCart);
 		return currentOrder;
+	}
+	
+	public static void refreshCartItemsTableModel(List<CartItem> cartItems) {
+		clearCartItemsTableModel();
+		for (CartItem cartItem : cartItems) {
+			cartItemsTableModel.addRow(new Object[] { cartItem.getItemName(),
+					cartItem.getUnitPrice(), cartItem.getQuantity(),
+					cartItem.getAmount() });
+		}
 	}
 
 	public static void updateApplicationState(Object source) {
@@ -46,19 +54,10 @@ public final class ApplicationState {
 		}
 	}
 
-	public static void refreshDefaultTableModel(List<OrderItem> orderItems) {
-		resetDefaultTableModel();
-		for (OrderItem orderItem : orderItems) {
-			defaultTableModel.addRow(new Object[] { orderItem.getItem(),
-					orderItem.getUnitPrice(), orderItem.getQuantity(),
-					orderItem.getAmount() });
-		}
-	}
-
-	public static void resetDefaultTableModel() {
-		int rowCount = defaultTableModel.getRowCount();
+	private static void clearCartItemsTableModel() {
+		int rowCount = cartItemsTableModel.getRowCount();
 		for (int i = 0; i < rowCount; i++) {
-			defaultTableModel.removeRow(0);
+			cartItemsTableModel.removeRow(0);
 		}
 	}
 }

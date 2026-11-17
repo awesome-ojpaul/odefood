@@ -18,15 +18,15 @@ import odefood.ApplicationState;
 import odefood.ApplicationStateEvent;
 import odefood.ApplicationStateListener;
 import odefood.data.models.Cart;
+import odefood.data.models.CartItem;
 import odefood.data.models.Item;
 import odefood.data.models.Order;
-import odefood.data.models.OrderItem;
 import odefood.ui.Constants;
 
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel implements ApplicationStateListener {
 
-	private JTable itemsTable;
+	private JTable cartItemsTable;
 	private JButton completeButton;
 
 	public MainPanel() {
@@ -53,7 +53,7 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 
 	@Override
 	public void OnApplicationStateChanged(ApplicationStateEvent e) {
-		itemsTable.setModel(ApplicationState.defaultTableModel);
+		cartItemsTable.setModel(ApplicationState.cartItemsTableModel);
 		completeButton.setEnabled(ApplicationState.canCompleteOrder);
 	}
 
@@ -63,34 +63,35 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 			BorderLayout orderItemsPanelLayout = new BorderLayout();
 			setLayout(orderItemsPanelLayout);
 
-			itemsTable = new JTable();
-			itemsTable.setModel(ApplicationState.defaultTableModel);
-			itemsTable.setGridColor(Color.LIGHT_GRAY);
-			itemsTable.setFont(Constants.BODY_FONT);
-			itemsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			itemsTable.getSelectionModel().addListSelectionListener(e -> {
+			cartItemsTable = new JTable();
+			cartItemsTable.setModel(ApplicationState.cartItemsTableModel);
+			cartItemsTable.setGridColor(Color.LIGHT_GRAY);
+			cartItemsTable.setFont(Constants.BODY_FONT);
+			cartItemsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			cartItemsTable.getSelectionModel().addListSelectionListener(e -> {
 				if (!e.getValueIsAdjusting()) {
-					int selectedRow = itemsTable.getSelectedRow();
+					int selectedRow = cartItemsTable.getSelectedRow();
 					if (selectedRow != -1) {
-						int row = itemsTable.convertRowIndexToModel(selectedRow);
-						String name = itemsTable.getModel().getValueAt(row, 0).toString();
-						int quantity = Integer.parseInt(itemsTable.getModel().getValueAt(row, 2).toString());
+						int row = cartItemsTable.convertRowIndexToModel(selectedRow);
+						String name = cartItemsTable.getModel().getValueAt(row, 0).toString();
+						int quantity = Integer.parseInt(cartItemsTable.getModel().getValueAt(row, 2).toString());
 
 						ApplicationState.selectedItem = Item.get(name);
-						ApplicationState.selectedOrderItem = new OrderItem(ApplicationState.selectedItem, quantity);
+						ApplicationState.selectedCartItem = new CartItem(ApplicationState.selectedItem, quantity);
+						
 						ApplicationState.updateApplicationState(e.getSource());
 					}
 				}
 			});
 
-			ApplicationState.defaultTableModel.addTableModelListener(e -> {
+			ApplicationState.cartItemsTableModel.addTableModelListener(e -> {
 				if (e.getType() == TableModelEvent.INSERT || e.getType() == TableModelEvent.UPDATE
 						|| e.getType() == TableModelEvent.DELETE) {
 					ApplicationState.updateApplicationState(e.getSource());
 				}
 			});
 
-			JScrollPane scrollPane = new JScrollPane(itemsTable);
+			JScrollPane scrollPane = new JScrollPane(cartItemsTable);
 			add(scrollPane);
 		}
 	}
@@ -107,14 +108,13 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 
 				if (ApplicationState.currentCart != null) {
 					Cart.discardCart(ApplicationState.currentCart);
-					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
+					ApplicationState.refreshCartItemsTableModel(ApplicationState.currentCart.getItems());
 				}
 				
 				ApplicationState.currentCart = null;
 				ApplicationState.selectedItem = null;
-				ApplicationState.selectedOrderItem = null;
+				ApplicationState.selectedCartItem = null;
 				
-				ApplicationState.resetDefaultTableModel();
 				ApplicationState.updateApplicationState(e.getSource());
 			});
 			add(clearButton);
@@ -127,12 +127,12 @@ public class MainPanel extends JPanel implements ApplicationStateListener {
 					Order.save(currentOrder);
 
 					Cart.discardCart(ApplicationState.currentCart);
+					ApplicationState.refreshCartItemsTableModel(ApplicationState.currentCart.getItems());
 					ApplicationState.currentCart = null;
 					ApplicationState.selectedItem = null;
-					ApplicationState.selectedOrderItem = null;
-					
-					ApplicationState.resetDefaultTableModel();
+					ApplicationState.selectedCartItem = null;
 					ApplicationState.canCompleteOrder = false;
+					
 					ApplicationState.updateApplicationState(e.getSource());
 				}
 			});

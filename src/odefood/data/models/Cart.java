@@ -10,7 +10,7 @@ public class Cart {
 	private double subtotal = 0.0;
 	private double total = 0.0;
 	private int itemsCount = 0;
-	private List<OrderItem> cartItems = new ArrayList<>();
+	private List<CartItem> cartItems = new ArrayList<>();
 
 	public Cart() {
 		number = UUID.randomUUID().toString().substring(0, 6);
@@ -18,8 +18,8 @@ public class Cart {
 
 	public static Order convertToOrder(Cart cart) {
 		Order order = new Order(cart.number, cart.discount, cart.subtotal);
-		for (OrderItem orderItem : cart.cartItems) {
-			order.addOrderItem(orderItem);
+		for (CartItem cartItem : cart.cartItems) {
+			order.addOrderItem(cartItem.convertToOrderItem());
 		}
 		cart = null;
 		return order;
@@ -35,8 +35,8 @@ public class Cart {
 
 	public double getSubtotal() {
 		subtotal = 0.0;
-		for (OrderItem orderItem : cartItems) {
-			subtotal = subtotal + orderItem.getAmount();
+		for (CartItem cartItem : cartItems) {
+			subtotal = subtotal + cartItem.getAmount();
 		}
 
 		return subtotal;
@@ -53,7 +53,7 @@ public class Cart {
 		return itemsCount;
 	}
 
-	public List<OrderItem> getItems() {
+	public List<CartItem> getItems() {
 		return cartItems;
 	}
 
@@ -69,26 +69,27 @@ public class Cart {
 		this.discount = discount;
 	}
 
-	private OrderItem getContainedOrderItem(Item item) {
-		OrderItem containedOrderItem = null;
-		for (OrderItem orderItem : cartItems) {
-			if (orderItem.getItemId() == item.getId()) {
-				containedOrderItem = orderItem;
+	private CartItem getContainedCartItem(Item item) {
+		CartItem containedCartItem = null;
+		for (CartItem cartItem : cartItems) {
+			
+			if (cartItem.getItemId() == item.getId()) {
+				containedCartItem = cartItem;
 			}
 		}
 
-		return containedOrderItem;
+		return containedCartItem;
 	}
 
 	public void addItem(Item item, int quantity) {
 		int quantityAvailable = Item.getAvailableQuantity(item.getId());
 		if (quantityAvailable >= quantity) {
 			Item.updateAvailableQuantity(item.getId(), quantityAvailable - quantity);
-			OrderItem orderItem = getContainedOrderItem(item);
-			if (orderItem != null) {
-				orderItem.setQuantity(orderItem.getQuantity() + quantity);
+			CartItem cartItem = getContainedCartItem(item);
+			if (cartItem != null) {
+				cartItem.setQuantity(cartItem.getQuantity() + quantity);
 			} else {
-				cartItems.add(new OrderItem(item, quantity));
+				cartItems.add(new CartItem(item, quantity));
 			}
 		}
 	}
@@ -96,18 +97,18 @@ public class Cart {
 	public void removeItem(Item item) {
 		int itemId = item.getId();
 		int quantityAvailable = Item.getAvailableQuantity(itemId);
-		OrderItem orderItem = getContainedOrderItem(item);
-		if (orderItem != null) {
-			Item.updateAvailableQuantity(itemId, quantityAvailable + orderItem.getQuantity());
-			cartItems.remove(orderItem);
+		CartItem cartItem = getContainedCartItem(item);
+		if (cartItem != null) {
+			Item.updateAvailableQuantity(itemId, quantityAvailable + cartItem.getQuantity());
+			cartItems.remove(cartItem);
 		}
 	}
 
 	public void removeItems() {
-		for (OrderItem item : cartItems) {
-			int itemId = item.getItemId();
+		for (CartItem cartItem : cartItems) {
+			int itemId = cartItem.getItemId();
 			int quantityAvailable = Item.getAvailableQuantity(itemId);
-			Item.updateAvailableQuantity(itemId, quantityAvailable + item.getQuantity());
+			Item.updateAvailableQuantity(itemId, quantityAvailable + cartItem.getQuantity());
 		}
 	}
 }

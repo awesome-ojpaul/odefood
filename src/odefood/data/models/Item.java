@@ -100,7 +100,7 @@ public class Item {
 	@Override
 	public String toString() {
 		super.toString();
-		return name + " ---- UGX " + price;
+		return quantity + " -- " + name + " -- UGX " + price;
 	}
 	
 	@Override

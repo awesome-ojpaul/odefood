@@ -15,7 +15,7 @@ public class Order {
 	private double subtotal = 0.0;
 	private double total = 0.0;
 	private int itemsCount = 0;
-	private List<OrderItem> items = new ArrayList<>();
+	private List<OrderItem> orderItems = new ArrayList<>();
 
 	public int getId() {
 		return id;
@@ -43,7 +43,7 @@ public class Order {
 
 	public double getSubtotal() {
 		subtotal = 0;
-		for (OrderItem orderItem : items) {
+		for (OrderItem orderItem : orderItems) {
 			subtotal = subtotal + orderItem.getAmount();
 		}
 
@@ -61,7 +61,7 @@ public class Order {
 	}
 
 	public int getItemsCount() {
-		itemsCount = items.size();
+		itemsCount = orderItems.size();
 		return itemsCount;
 	}
 
@@ -78,11 +78,11 @@ public class Order {
 	}
 
 	public void addOrderItem(OrderItem orderItem) {
-		items.add(orderItem);
+		orderItems.add(orderItem);
 	}
 
 	public void removeItems() {
-		items.clear();
+		orderItems.clear();
 		discount = 0.0;
 		subtotal = 0.0;
 		total = 0.0;
@@ -90,11 +90,11 @@ public class Order {
 	}
 
 	public List<OrderItem> getItems() {
-		if (items.size() <= 0) {
-			// TODO - Get order items from data source
+		if (orderItems.size() <= 0) {
+			// TODO - Get order orderItems from data source
 		}
 
-		return items;
+		return orderItems;
 	}
 
 	public void save() {

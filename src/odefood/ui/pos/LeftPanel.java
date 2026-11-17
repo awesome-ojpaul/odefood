@@ -86,7 +86,7 @@ public class LeftPanel extends JPanel {
 		@Override
 		public void OnApplicationStateChanged(ApplicationStateEvent e) {
 			loadCategories();
-			
+
 		}
 	}
 
@@ -111,16 +111,17 @@ public class LeftPanel extends JPanel {
 							selectedItemTextField.setText(ApplicationState.selectedItem.getName());
 							selectedItemPriceTextField
 									.setText(String.valueOf(ApplicationState.selectedItem.getPrice()));
-							if (ApplicationState.selectedOrderItem != null && ApplicationState.selectedItem.getName()
-									.equalsIgnoreCase(ApplicationState.selectedOrderItem.getItem())) {
+							if (ApplicationState.selectedCartItem != null
+									&& ApplicationState.selectedCartItem.isItem(ApplicationState.selectedItem)) {
 								selectedItemQuantityTextField
-										.setText(String.valueOf(ApplicationState.selectedOrderItem.getQuantity()));
+										.setText(String.valueOf(ApplicationState.selectedCartItem.getQuantity()));
 							} else {
 								selectedItemQuantityTextField.setText(String.valueOf(1));
 							}
 						}
 					} else {
 						ApplicationState.selectedItem = null;
+						ApplicationState.selectedCartItem = null;
 						selectedItemTextField.setText("");
 						selectedItemPriceTextField.setText("");
 						selectedItemQuantityTextField.setText("");
@@ -132,14 +133,13 @@ public class LeftPanel extends JPanel {
 			loadItems();
 			JScrollPane scrollPane = new JScrollPane(itemsList);
 			add(scrollPane, "Center");
-			
 
 			ApplicationState.addApplicationStateListener(this);
 		}
 
 		@Override
 		public void OnApplicationStateChanged(ApplicationStateEvent e) {
-			loadItems();			
+			loadItems();
 		}
 	}
 
@@ -180,9 +180,9 @@ public class LeftPanel extends JPanel {
 				if (ApplicationState.selectedItem != null) {
 
 					ApplicationState.currentCart.removeItem(ApplicationState.selectedItem);
-					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
+					ApplicationState.refreshCartItemsTableModel(ApplicationState.currentCart.getItems());
 
-					ApplicationState.selectedOrderItem = null;
+					ApplicationState.selectedCartItem = null;
 					ApplicationState.selectedItem = null;
 					selectedItemTextField.setText("");
 					selectedItemPriceTextField.setText("");
@@ -199,11 +199,11 @@ public class LeftPanel extends JPanel {
 					if (ApplicationState.currentCart == null) {
 						ApplicationState.currentCart = new Cart();
 					}
-					
-					ApplicationState.currentCart.addItem(ApplicationState.selectedItem, quantity);
-					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
 
-					ApplicationState.selectedOrderItem = null;
+					ApplicationState.currentCart.addItem(ApplicationState.selectedItem, quantity);
+					ApplicationState.refreshCartItemsTableModel(ApplicationState.currentCart.getItems());
+
+					ApplicationState.selectedCartItem = null;
 					ApplicationState.selectedItem = null;
 					selectedItemTextField.setText("");
 					selectedItemPriceTextField.setText("");
@@ -219,10 +219,10 @@ public class LeftPanel extends JPanel {
 
 		@Override
 		public void OnApplicationStateChanged(ApplicationStateEvent e) {
-			if (ApplicationState.selectedItem != null && ApplicationState.selectedOrderItem != null) {
+			if (ApplicationState.selectedItem != null && ApplicationState.selectedCartItem != null) {
 				selectedItemTextField.setText(ApplicationState.selectedItem.getName());
 				selectedItemPriceTextField.setText(String.valueOf(ApplicationState.selectedItem.getPrice()));
-				selectedItemQuantityTextField.setText(String.valueOf(ApplicationState.selectedOrderItem.getQuantity()));
+				selectedItemQuantityTextField.setText(String.valueOf(ApplicationState.selectedCartItem.getQuantity()));
 				itemsList.setSelectedValue(ApplicationState.selectedItem, true);
 			} else {
 				selectedItemTextField.setText("");

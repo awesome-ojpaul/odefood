@@ -139,23 +139,16 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 			discardButton.addActionListener(e -> {
 				if (ApplicationState.currentCart != null) {
 					Cart.discardCart(ApplicationState.currentCart);
-					ApplicationState.refreshDefaultTableModel(ApplicationState.currentCart.getItems());
+					ApplicationState.refreshCartItemsTableModel(ApplicationState.currentCart.getItems());
 				}
 				
 				ApplicationState.currentCart = null;
 				ApplicationState.selectedItem = null;
-				ApplicationState.selectedOrderItem = null;
-				
-				ApplicationState.resetDefaultTableModel();
+				ApplicationState.selectedCartItem = null;
+
 				ApplicationState.updateApplicationState(e.getSource());
-				invoiceEditorPane.setText("");
 			});
 			panel.add(discardButton);
-
-			invoiceEditorPane = new JEditorPane();
-			invoiceEditorPane.setContentType("text/html");
-			invoiceEditorPane.setEditable(false);
-			invoiceEditorPane.setFont(Constants.BODY_FONT);
 
 			JButton printButton = new JButton("Print Invoice");
 			printButton.addActionListener(e -> {
@@ -190,6 +183,11 @@ public class RightPanel extends JPanel implements ApplicationStateListener {
 			layout.setHgap(5);
 			layout.setVgap(5);
 			setLayout(layout);
+			
+			invoiceEditorPane = new JEditorPane();
+			invoiceEditorPane.setContentType("text/html");
+			invoiceEditorPane.setEditable(false);
+			invoiceEditorPane.setFont(Constants.BODY_FONT);
 			add(new JScrollPane(invoiceEditorPane));
 		}
 	}
